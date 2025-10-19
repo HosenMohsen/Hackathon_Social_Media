@@ -1,15 +1,15 @@
-const API_POST_URL = 'http://localhost:3000/api/post';            
+const API_POST_URL = `${import.meta.env.VITE_API_URL}/posts`;
 
-
- export async function fetchPosts() {
+export async function fetchPosts() {
     try {
         const response = await fetch(API_POST_URL);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        chats.value = await response.json();
+        const posts = await response.json();
+        return posts;
     } catch (error) {
-        console.error('Error fetching users:', error);
+        console.error('Error fetching posts:', error);
     }
 }
 
@@ -32,16 +32,8 @@ export async function addPost() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const newPost = await response.json();
-        posts.value.push(newPost);
-        uuid.value = '';
-        content.value = '';
-        createdAt.value = '';
-        createdBy.value = '';
-        images.value = '';
+        return newPost;
     } catch (error) {
-        console.error('Error adding user:', error);
+        console.error('Error adding post:', error);
     }
 }
-
-
-

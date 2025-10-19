@@ -20,9 +20,9 @@ export async function fetchComments(profileUuid) {
 }
 
 
-export async function addComment(comment) {
+export async function addComment(comment, targetModel) {
     try {
-        const response = await fetch(API_COMMENT_URL + '/profile/' + comment.profile, {
+        const response = await fetch(API_COMMENT_URL + '/' + targetModel + '/' + comment.profile, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

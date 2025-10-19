@@ -36,7 +36,8 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted } from 'vue'
 import { Doughnut, Chart } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -49,7 +50,7 @@ import {
   Tooltip,
   Legend
 } from 'chart.js'
-import { getUsersByGender, getUsersCount, getAddressesCount, getAverageAge, getUsersByCreationDate} from '@/api/statisticsApi'
+import { getUsersByGender, getUsersCount, getAddressesCount, getAverageAge, getUsersByCreationDate } from '@/api/statisticsApi'
 import { getUsers } from '@/api/userApi.js'
 
 ChartJS.register(
@@ -63,106 +64,98 @@ ChartJS.register(
   Legend
 )
 
+const loaded = ref(false)
+const chartData = ref(null)
+const doughnutOptions = ref(null)
+const chart2Data = ref(null)
+const chart2Options = ref(null)
+const usersCount = ref(0)
+const addressesCount = ref(0)
+const averageAge = ref(0)
 
-export default {
-  name: 'StatisticsView',
-  components: { Doughnut, Chart },
-  data: () => ({
-    loaded: false,
-    chartData: null,
-    doughnutOptions: null,
-    chart2Data: null,
-    chart2Options: null,
-    usersCount: 0,
-    addressesCount: 0,
-    averageAge: 0
-  }),
-  computed: {
-    averageAgeDisplay() {
-      return this.averageAge ? this.averageAge.toFixed(1) : '-';
+const averageAgeDisplay = computed(() => {
+  return averageAge.value ? averageAge.value.toFixed(1) : '-'
+})
+
+onMounted(async () => {
+  loaded.value = false
+  try {
+    const userlist = await getUsers()
+    const nbUsersByGender = await getUsersByGender(userlist)
+    usersCount.value = await getUsersCount(userlist)
+    addressesCount.value = await getAddressesCount(userlist)
+    averageAge.value = await getAverageAge(userlist)
+    const monthlyRegistrations = await getUsersByCreationDate(userlist)
+    chartData.value = {
+      labels: ['Male', 'Female', 'Other'],
+      datasets: [
+        {
+          label: "Nombre d'utilisateurs",
+          backgroundColor: ['#f87979', '#7CBB00', '#00ADEF'],
+          borderColor: '#ffffff',
+          borderWidth: 2,
+          data: [nbUsersByGender.male, nbUsersByGender.female, nbUsersByGender.other]
+        }
+      ]
     }
-  },
-  async mounted () {
-    this.loaded = false
 
-    try {
-      const userlist = await getUsers()
-      const nbUsersByGender = await getUsersByGender(userlist)
-      this.usersCount = await getUsersCount(userlist)
-      this.addressesCount = await getAddressesCount(userlist)
-      this.averageAge = await getAverageAge(userlist)
-      const monthlyRegistrations = await getUsersByCreationDate(userlist)
-      this.chartData = {
-        labels: ['Male', 'Female', 'Other'],
-        datasets: [
-          {
-            label: "Nombre d'utilisateurs",
-            backgroundColor: ['#f87979', '#7CBB00', '#00ADEF'],
-            borderColor: '#ffffff',
-            borderWidth: 2,
-            data: [nbUsersByGender.male, nbUsersByGender.female, nbUsersByGender.other]
-          }
-        ]
-      }
-
-      this.doughnutOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'bottom'
-          }
+    doughnutOptions.value = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom'
         }
       }
+    }
 
-      this.chart2Data = {
-        labels: ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'],
-        datasets: [
-          {
-            label: 'Utilisateurs inscrits',
-            backgroundColor: '#00ADEF',
-            borderRadius: 6,
-            data: monthlyRegistrations
-          }
-        ]
-      }
+    chart2Data.value = {
+      labels: ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'],
+      datasets: [
+        {
+          label: 'Utilisateurs inscrits',
+          backgroundColor: '#00ADEF',
+          borderRadius: 6,
+          data: monthlyRegistrations
+        }
+      ]
+    }
 
-      this.chart2Options = {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          x: {
-            ticks: {
-              color: '#6b7280'
-            },
-            grid: {
-              display: false
-            }
+    chart2Options.value = {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          ticks: {
+            color: '#6b7280'
           },
-          y: {
-            beginAtZero: true,
-            ticks: {
-              stepSize: 1,
-              color: '#6b7280'
-            },
-            grid: {
-              color: '#e5e7eb'
-            }
+          grid: {
+            display: false
           }
         },
-        plugins: {
-          legend: {
-            display: false
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1,
+            color: '#6b7280'
           },
-          title: {
-            display: false
+          grid: {
+            color: '#e5e7eb'
           }
         }
+      },
+      plugins: {
+        legend: {
+          display: false
+        },
+        title: {
+          display: false
+        }
       }
-      this.loaded = true
-    } catch (e) {
-      console.error(e)
-    }   
+    }
+    loaded.value = true
+  } catch (e) {
+    console.error(e)
   }
-}
+})
 </script>

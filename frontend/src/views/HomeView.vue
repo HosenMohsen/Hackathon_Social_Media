@@ -3,6 +3,7 @@ import { ref, onMounted } from "vue";
 import PostList from "@/components/PostList.vue";
 import { getUsers } from "@/api/userApi.js";
 import { RouterLink } from "vue-router";
+import { fetchPosts } from "@/api/postApi";
 
 const posts = ref([]);
 const userlist = ref([]);
@@ -22,13 +23,7 @@ onMounted(async () => {
   } catch (e) {
     console.error(e);
   }
-  posts.value = [
-    { id: 1, user: "Alice", content: "Hello world!" },
-    { id: 2, user: "Bob", content: "Vue is awesome!" },
-    { id: 3, user: "Max", content: "test" },
-    { id: 4, user: "Bob", content: "Vue is awesome!" },
-    { id: 5, user: "Bob", content: "Vue is awesome!" },
-  ];
+  posts.value = await fetchPosts();
 });
 </script>
 

@@ -91,6 +91,7 @@
             <AddComment
                 v-if="user"
                 :userUuid="user.uuid"
+                :targetModel="'profile'"
                 @comment-added="handleCommentAdded"
             />
 
@@ -153,161 +154,156 @@
 </template>
 
 
-<script>
+<script setup>
+import { ref, computed, watch, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import Comment from '../components/Comment.vue';
 import AddComment from '../components/AddComment.vue';
 import { fetchComments, addComment as apiAddComment, updateComment, deleteComment } from '../api/commentApi.js';
 import { getUserByUuid, getCurrentUser, updateUser } from '../api/userApi.js';
 
-export default {
-    name: 'ProfileView',
-    components: { Comment, AddComment },
-    data() {
-        return {
-            user: null,
-            isOwnProfile: false,
-            comments: [],
-            // newComment: '',
-            loadingComments: false,
-            editingComment: null,
-            editContent: '',
-            editingProfile: false,
-            profileDraft: null,
-        };
-    },
-    async created() {
-        await this.initProfile();
-    },
-    methods: {
-        async initProfile() {
-            this.isOwnProfile = false;
-            let uuid = this.$route && this.$route.params ? this.$route.params.uuid : null;
+const route = useRoute();
 
-            if (!uuid) {
-                try {
-                    const me = await getCurrentUser();
-                    if (me && me.uuid) {
-                        uuid = me.uuid;
-                        this.isOwnProfile = true;
-                    }
-                } catch (e) {
-                    uuid = null;
-                }
+const user = ref(null);
+const isOwnProfile = ref(false);
+const comments = ref([]);
+const loadingComments = ref(false);
+const editingComment = ref(null);
+const editContent = ref('');
+const editingProfile = ref(false);
+const profileDraft = ref(null);
+
+function formatDate(date) {
+    if (!date) return '';
+    const d = new Date(date);
+    return d.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+async function fetchUserProfile(uuid) {
+    try {
+        if (!uuid && !isOwnProfile.value) {
+            user.value = null;
+            return;
+        }
+        if (isOwnProfile.value) {
+            user.value = await getCurrentUser();
+        } else {
+            user.value = await getUserByUuid(uuid);
+        }
+        if (isOwnProfile.value && user.value) {
+            profileDraft.value = { ...user.value };
+        }
+    } catch (e) {
+        user.value = null;
+    }
+}
+
+async function fetchCommentsFn() {
+    loadingComments.value = true;
+    try {
+        if (!user.value) return;
+        const result = await fetchComments(user.value.uuid);
+        comments.value = Array.isArray(result) ? result : [];
+    } catch (e) {
+        comments.value = [];
+    }
+    loadingComments.value = false;
+}
+
+async function initProfile() {
+    isOwnProfile.value = false;
+    let uuid = route.params?.uuid || null;
+    if (!uuid) {
+        try {
+            const me = await getCurrentUser();
+            if (me && me.uuid) {
+                uuid = me.uuid;
+                isOwnProfile.value = true;
             }
+        } catch (e) {
+            uuid = null;
+        }
+    }
+    await fetchUserProfile(uuid);
+    await fetchCommentsFn();
+}
 
-            await this.fetchUserProfile(uuid);
-            await this.fetchComments();
-        },
+function handleCommentAdded(newComment) {
+    if (newComment) {
+        comments.value.unshift(newComment);
+    }
+}
 
-        beforeRouteUpdate(to, from, next) {
-            this.$nextTick(async () => {
-                try {
-                    await this.initProfile();
-                } catch (e) {
-                    // ignore
-                }
-                next();
-            });
-        },
+function isAuthor(comment) {
+    return comment.userIsAuthor;
+}
 
-        formatDate(date) {
-            if (!date) return '';
-            const d = new Date(date);
-            return d.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
-        },
-        async fetchUserProfile(uuid) {
-            try {
-                if (!uuid && !this.isOwnProfile) {
-                    this.user = null;
-                    return;
-                }
+function startEditProfile() {
+    editingProfile.value = true;
+    profileDraft.value = { ...user.value };
+}
 
-                if (this.isOwnProfile) {
-                    this.user = await getCurrentUser();
-                } else {
-                    this.user = await getUserByUuid(uuid);
-                }
+function cancelProfileEdit() {
+    editingProfile.value = false;
+    profileDraft.value = user.value ? { ...user.value } : null;
+}
 
-                if (this.isOwnProfile && this.user) {
-                    this.profileDraft = { ...this.user };
-                }
-            } catch (e) {
-                this.user = null;
-            }
-        },
-        async fetchComments() {
-            this.loadingComments = true;
-            try {
-                if (!this.user) return;
-                const comments = await fetchComments(this.user.uuid);
-                this.comments = Array.isArray(comments) ? comments : [];
-            } catch (e) {
-                this.comments = [];
-            }
-            this.loadingComments = false;
-        },
-        handleCommentAdded(newComment) {
-            if (newComment) {
-                this.comments.unshift(newComment);
-            }
-        },
-        isAuthor(comment) {
-            return comment.userIsAuthor;
-        },
-        startEditProfile() {
-            this.editingProfile = true;
-            this.profileDraft = { ...this.user };
-        },
-        cancelProfileEdit() {
-            this.editingProfile = false;
-            this.profileDraft = this.user ? { ...this.user } : null;
-        },
-        async saveProfile() {
-            if (!this.profileDraft || !this.user) return;
-            try {
-                const updated = await updateUser(this.user.uuid, this.profileDraft);
-                if (updated) {
-                    this.user = { ...this.profileDraft };
-                    this.editingProfile = false;
-                }
-            } catch (e) {
-                console.error(e);
-            }
-        },
-        editComment(comment) {
-            this.editingComment = comment;
-            this.editContent = comment.message;
-        },
-        async saveEdit() {
-            if (!this.editContent.trim() || !this.editingComment) return;
-            try {
-                const updated = await updateComment(this.editingComment.uuid, this.editContent);
-                if (updated) {
-                    const idx = this.comments.findIndex(c => c.uuid === this.editingComment.uuid);
-                    if (idx !== -1) this.comments[idx].message = this.editContent;
-                }
-            } catch (e) {}
-            this.editingComment = null;
-            this.editContent = '';
-        },
-        cancelEdit() {
-            this.editingComment = null;
-            this.editContent = '';
-        },
-        async deleteComment(commentUuid) {
-            try {
-                const deleted = await deleteComment(commentUuid);
-                if (deleted) {
-                    this.comments = this.comments.filter(c => c.uuid !== commentUuid);
-                }
-            } catch (e) {}
-        },
-    },
-    watch: {
-        '$route'(to, from) {
-            if (to.fullPath === from.fullPath) return;
-            this.initProfile().catch(() => {});
-        },
-    },
-};
+async function saveProfile() {
+    if (!profileDraft.value || !user.value) return;
+    try {
+        const updated = await updateUser(user.value.uuid, profileDraft.value);
+        if (updated) {
+            user.value = { ...profileDraft.value };
+            editingProfile.value = false;
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+function editComment(comment) {
+    editingComment.value = comment;
+    editContent.value = comment.message;
+}
+
+async function saveEdit() {
+    if (!editContent.value.trim() || !editingComment.value) return;
+    try {
+        const updated = await updateComment(editingComment.value.uuid, editContent.value);
+        if (updated) {
+            const idx = comments.value.findIndex(c => c.uuid === editingComment.value.uuid);
+            if (idx !== -1) comments.value[idx].message = editContent.value;
+        }
+    } catch (e) {}
+    editingComment.value = null;
+    editContent.value = '';
+}
+
+function cancelEdit() {
+    editingComment.value = null;
+    editContent.value = '';
+}
+
+async function deleteCommentFn(commentUuid) {
+    try {
+        const deleted = await deleteComment(commentUuid);
+        if (deleted) {
+            comments.value = comments.value.filter(c => c.uuid !== commentUuid);
+        }
+    } catch (e) {}
+}
+
+// Watch route changes
+watch(
+    () => route.fullPath,
+    async (to, from) => {
+        if (to === from) return;
+        await initProfile();
+    }
+);
+
+// On mount
+onMounted(() => {
+    initProfile();
+});
 </script>

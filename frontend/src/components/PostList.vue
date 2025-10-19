@@ -2,13 +2,12 @@
     <div class="space-y-6">
         <Post
             v-for="post in posts"
-            :key="post.id"
-            :author="post.author"
+            :key="post.uuid"
+            :author="post.createdBy"
             :content="post.content"
-            :timestamp="post.timestamp"
-            :likes="post.likes"
+            :timestamp="post.createdAt"
             :comments="post.comments"
-            :avatar="post.avatar"
+            :images="post.images"
         />
     </div>
 </template>

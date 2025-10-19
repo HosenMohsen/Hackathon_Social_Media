@@ -27,6 +27,10 @@ const props = defineProps({
 	userUuid: {
 		type: String,
 		required: true
+	},
+	targetModel: {
+		type: String,
+		required: true
 	}
 });
 const emit = defineEmits(['comment-added']);
@@ -40,10 +44,9 @@ async function submitComment() {
 	try {
 		const newComment = await apiAddComment({
 			message: comment.value,
-			profile: props.userUuid
-		});
+			[props.targetModel]: props.userUuid
+		}, props.targetModel);
 		if (newComment) {
-            console.log('New comment added:', newComment);
 			emit('comment-added', newComment);
 			comment.value = '';
 		}
