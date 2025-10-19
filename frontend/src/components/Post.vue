@@ -59,7 +59,7 @@
 import { ref, computed, onMounted } from 'vue'
 import AddComment from './AddComment.vue'
 import Comment from './Comment.vue'
-import { fetchComments, deleteComment } from '@/api/commentApi'
+import { fetchComments, updateComment, deleteComment } from '../api/commentApi.js';
 
 const editingComment = ref(null);
 const editContent = ref('');
