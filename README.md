@@ -117,3 +117,8 @@ Link backend Vercel : [https://hackathon-social-media-backend-phi.vercel.app/](h
 - One-to-Many : User (uuid) -> Token (userUuid)
 - One-to-Many : Post (_id) -> Comment (targetId + targetModel="post")
 - Polymorphique : Comment -> User || Post
+
+
+## Deployment Strategy
+
+We disabled Vercel's native continuous deployment (CD) to use GitHub Actions workflows (.yml) for automated deployment. The frontend is deployed only when its folder is modified, and the backend only when the backend folder is changed. Vercel's CD can be used, but we preferred the flexibility of GitHub Actions.
