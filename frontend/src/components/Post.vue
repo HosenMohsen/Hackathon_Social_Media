@@ -15,12 +15,14 @@
             {{ post.content }}
         </div>
         <div v-if="post.images && post.images.length" class="mb-4">
-            <div
-                v-for="(image, index) in post.images"
-                :key="index"
-                class="mb-4"
-            >
-                <img :src="image" alt="Post image" class="rounded-lg w-full max-h-60 object-cover" />
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div
+                    v-for="(image, index) in post.images"
+                    :key="index"
+                    class=""
+                >
+                    <img :src="image" alt="Post image" class="rounded-lg w-full h-40 object-cover" />
+                </div>
             </div>
         </div>
         <div class="flex justify-between items-center text-gray-500 text-sm border-t pt-3 mb-2">
