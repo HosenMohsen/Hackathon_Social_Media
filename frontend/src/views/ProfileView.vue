@@ -103,9 +103,15 @@
                             :content="comment.message"
                             :createdAt="comment.createdAt"
                         />
-                        <div class="absolute right-2 top-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition ml-14 mt-2">
-                            <button v-if="isAuthor(comment)" @click="editComment(comment)" class="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200">Modifier</button>
-                            <button v-if="isAuthor(comment)" @click="deleteCommentProfile(comment.uuid)" class="text-xs px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700">Supprimer</button>
+                        <div
+                            :class="[
+                                isMobile
+                                    ? 'flex items-center gap-2 mt-2 mb-1 relative z-0'
+                                    : 'absolute right-2 top-2 flex items-center gap-2 transition ml-14 mt-2 z-10 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto'
+                            ]"
+                        >
+                            <button v-if="isAuthor(comment)" @click="editComment(comment)" class="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200 min-w-[70px]">Modifier</button>
+                            <button v-if="isAuthor(comment)" @click="deleteCommentProfile(comment.uuid)" class="text-xs px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 min-w-[70px]">Supprimer</button>
                         </div>
                     </div>
                 </div>
@@ -155,7 +161,7 @@
 
 
 <script setup>
-import { ref, onMounted, watch, nextTick } from 'vue';
+import { ref, onMounted, watch, nextTick, onUnmounted } from 'vue';
 import { useRoute, useRouter, onBeforeRouteUpdate } from 'vue-router';
 import Comment from '../components/Comment.vue';
 import AddComment from '../components/AddComment.vue';
@@ -294,8 +300,18 @@ async function initProfile() {
     await fetchCommentsProfile();
 }
 
+// Responsive helper
+const isMobile = ref(false);
+function checkMobile() {
+    isMobile.value = window.innerWidth < 768;
+}
 onMounted(async () => {
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
     await initProfile();
+});
+onUnmounted(() => {
+    window.removeEventListener('resize', checkMobile);
 });
 
 onBeforeRouteUpdate(async (to, from, next) => {

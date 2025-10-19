@@ -25,11 +25,20 @@
                 </div>
             </div>
         </div>
-        <div class="flex justify-between items-center text-gray-500 text-sm border-t pt-3 mb-2">
-            <AddComment :targetUuid="post.uuid" :targetModel="'post'" @comment-added="handleCommentAdded" />
-            <div v-if="isPostAuthor" class="flex gap-2">
-                <button @click="editPost" class="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200">Modifier le post</button>
-                <button @click="deletePost" class="text-xs px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700">Supprimer le post</button>
+        <div class="border-t pt-3 mb-2 text-gray-500 text-sm">
+            <div
+                v-if="isPostAuthor"
+                :class="[
+                    isMobile
+                        ? 'flex gap-2 mt-3 mb-1 w-full justify-start' // sous le post en mobile
+                        : 'flex gap-2 ml-2 justify-end items-center mt-0'
+                ]"
+            >
+                <button @click="editPost" class="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200 min-w-[110px]">Modifier le post</button>
+                <button @click="deletePost" class="text-xs px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 min-w-[110px]">Supprimer le post</button>
+            </div>
+            <div class="flex justify-between items-center">
+                <AddComment :targetUuid="post.uuid" :targetModel="'post'" @comment-added="handleCommentAdded" />
             </div>
         </div>
         <div v-if="comments && comments.length" class="mt-4">
@@ -40,9 +49,19 @@
                     :content="comment.message"
                     :createdAt="comment.createdAt"
                 />
-                <div class="absolute right-2 top-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition ml-14 mt-2">
-                    <button v-if="isAuthor(comment)" @click="editComment(comment)" class="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200">Modifier</button>
-                    <button v-if="isAuthor(comment)" @click="deleteCommentPost(comment.uuid)" class="text-xs px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700">Supprimer</button>
+                <div
+                    :class="[
+                        isMobile
+                            ? 'flex items-center gap-2 mt-2 mb-1 relative z-0'
+                            : 'absolute right-2 top-2 flex items-center gap-2 transition ml-14 mt-2 z-10 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto'
+                    ]"
+                >
+                    <button v-if="isAuthor(comment)" @click="editComment(comment)"
+                        class="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200 min-w-[70px]"
+                    >Modifier</button>
+                    <button v-if="isAuthor(comment)" @click="deleteCommentPost(comment.uuid)"
+                        class="text-xs px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 min-w-[70px]"
+                    >Supprimer</button>
                 </div>
             </div>
         </div>
@@ -92,6 +111,21 @@ import Comment from './Comment.vue'
 import { fetchComments, updateComment, deleteComment } from '../api/commentApi.js';
 import { updatePost, deletePost as apiDeletePost } from '../api/postApi.js';
 const emit = defineEmits(['post-deleted']);
+
+import { onUnmounted } from 'vue';
+// Responsive helper
+const isMobile = ref(false);
+function checkMobile() {
+    isMobile.value = window.innerWidth < 768;
+}
+onMounted(() => {
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    loadComments();
+});
+onUnmounted(() => {
+    window.removeEventListener('resize', checkMobile);
+});
 
 const editingComment = ref(null);
 const editContent = ref('');
