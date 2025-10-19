@@ -155,7 +155,7 @@
 
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue';
+import { ref, onMounted, watch, nextTick } from 'vue';
 import { useRoute, useRouter, onBeforeRouteUpdate } from 'vue-router';
 import Comment from '../components/Comment.vue';
 import AddComment from '../components/AddComment.vue';
