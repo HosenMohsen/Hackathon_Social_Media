@@ -1,6 +1,6 @@
 
 <template>
-	<form @submit.prevent="submitComment" class="mt-4 bg-white rounded-lg p-4 shadow-sm">
+	<form @submit.prevent="submitComment" class="w-full mt-4 bg-white rounded-lg p-4 shadow-sm">
 		<textarea
 			v-model="comment"
 			placeholder="Write a comment..."
