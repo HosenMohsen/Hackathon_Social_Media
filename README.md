@@ -117,8 +117,3 @@ Link backend Vercel : [https://hackathon-social-media-backend-phi.vercel.app/](h
 - One-to-Many : User (uuid) -> Token (userUuid)
 - One-to-Many : Post (_id) -> Comment (targetId + targetModel="post")
 - Polymorphique : Comment -> User || Post
-
-
-## Deployment Strategy
-
-We use Vercel for deployment, configured to trigger deployments only when changes are made to the respective frontend or backend folders.
