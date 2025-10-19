@@ -2,19 +2,15 @@
     <div class="space-y-6">
         <Post
             v-for="post in posts"
-            :key="post.id"
-            :author="post.author"
-            :content="post.content"
-            :timestamp="post.timestamp"
-            :likes="post.likes"
-            :comments="post.comments"
-            :avatar="post.avatar"
+            :key="post.uuid || post._id"
+            :post="post"
         />
     </div>
 </template>
 
 <script setup>
 import Post from './Post.vue'
+
 
 defineProps({
     posts: {

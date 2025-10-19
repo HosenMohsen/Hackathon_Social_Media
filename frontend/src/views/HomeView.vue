@@ -2,6 +2,7 @@
 import { ref, onMounted } from "vue";
 import PostList from "@/components/PostList.vue";
 import { getUsers } from "@/api/userApi.js";
+import { fetchPosts } from "@/api/postApi.js";
 import { RouterLink } from "vue-router";
 
 const posts = ref([]);
@@ -18,17 +19,40 @@ const closeUserList = () => {
 
 onMounted(async () => {
   try {
-    userlist.value = await getUsers();
-  } catch (e) {
-    console.error(e);
+    const users = await getUsers();
+    userlist.value = Array.isArray(users) ? users : [];
+  } catch (error) {
+    console.error("Error while loading users:", error);
+    userlist.value = [];
   }
-  posts.value = [
-    { id: 1, user: "Alice", content: "Hello world!" },
-    { id: 2, user: "Bob", content: "Vue is awesome!" },
-    { id: 3, user: "Max", content: "test" },
-    { id: 4, user: "Bob", content: "Vue is awesome!" },
-    { id: 5, user: "Bob", content: "Vue is awesome!" },
-  ];
+
+  try {
+    const postsResponse = await fetchPosts();
+    const postsData = Array.isArray(postsResponse) ? postsResponse : [];
+    posts.value = postsData.map((post) => {
+      const source = post?.createdBy;
+      const createdByValue = (() => {
+        if (!source) return null;
+        if (typeof source === "string") return source;
+        if (typeof source === "object") {
+          return source._id || source.id || source.uuid || null;
+        }
+        return null;
+      })();
+      const matchedUser = userlist.value.find((user) => user._id === createdByValue);
+      return {
+        ...post,
+        author:
+          matchedUser ||
+          (typeof source === "object" && source !== null
+            ? source
+            : null),
+      };
+    });
+  } catch (error) {
+    console.error("Error while loading posts:", error);
+    posts.value = [];
+  }
 });
 </script>
 
