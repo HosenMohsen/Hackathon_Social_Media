@@ -30,7 +30,7 @@ router.get('/', getAllTokens)
  * @swagger
  * /tokens/check:
  *   get:
- *     summary: Vérifie la validité du token actuel
+ *     summary: Check if the current token is valid
  *     tags: [Tokens]
  *     security:
  *       - bearerAuth: []
