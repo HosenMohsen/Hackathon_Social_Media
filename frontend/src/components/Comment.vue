@@ -1,6 +1,7 @@
 <template>
 	<div class="flex items-start space-x-4 p-3 bg-white rounded-lg shadow hover:shadow-md transition-shadow duration-200">
-		<img :src="author.avatar" alt="Avatar" class="w-10 h-10 rounded-full border-2 border-gray-200 object-cover" />
+		<img :src="author.avatar || 'https://randomuser.me/api/portraits/lego/1.jpg'
+		" alt="Avatar" class="w-10 h-10 rounded-full border-2 border-gray-200 object-cover" />
 		<div class="flex-1">
 			<div class="flex items-center space-x-2 mb-1">
 				<span class="font-semibold text-gray-900 text-base">{{ author.firstName }} {{ author.lastName }}</span>

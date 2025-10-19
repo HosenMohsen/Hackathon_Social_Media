@@ -1,8 +1,8 @@
  const API_COMMENT_URL = `${import.meta.env.VITE_API_URL}/comments`;
 
-export async function fetchComments(profileUuid) {
+export async function fetchComments(targetModel, targetUuid) {
     try {
-        const response = await fetch(API_COMMENT_URL+'/profile/'+profileUuid, {
+        const response = await fetch(`${API_COMMENT_URL}/${targetModel}/${targetUuid}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -20,9 +20,9 @@ export async function fetchComments(profileUuid) {
 }
 
 
-export async function addComment(comment) {
+export async function addComment(comment, targetModel) {
     try {
-        const response = await fetch(API_COMMENT_URL + '/profile/' + comment.profile, {
+        const response = await fetch(API_COMMENT_URL + '/' + targetModel + '/' + comment.targetUuid, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -1,5 +1,4 @@
-const API_POST_URL = `${import.meta.env.VITE_API_URL}/posts/`;           
-
+const API_POST_URL = `${import.meta.env.VITE_API_URL}/posts`;
 
 export async function fetchPosts() {
     try {
@@ -13,10 +12,10 @@ export async function fetchPosts() {
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const comments = await response.json();
-        return comments;
+        const posts = await response.json();
+        return posts;
     } catch (error) {
-        console.error('Error fetching comments:', error);
+        console.error('Error fetching posts:', error);
     }
 }
 
@@ -39,16 +38,8 @@ export async function addPost() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const newPost = await response.json();
-        posts.value.push(newPost);
-        uuid.value = '';
-        content.value = '';
-        createdAt.value = '';
-        createdBy.value = '';
-        images.value = '';
+        return newPost;
     } catch (error) {
-        console.error('Error adding user:', error);
+        console.error('Error adding post:', error);
     }
 }
-
-
-

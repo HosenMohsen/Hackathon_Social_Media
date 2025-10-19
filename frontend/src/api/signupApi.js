@@ -24,7 +24,7 @@ export async function addUser(user) {
                 gender: user.gender,
                 lastName: user.lastname,
                 birthDate: user.birthdate,
-                adress: user.address
+                address: user.address
             })
         });
         const data = await response.json();

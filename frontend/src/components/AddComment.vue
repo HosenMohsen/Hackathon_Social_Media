@@ -24,7 +24,11 @@ import { addComment as apiAddComment } from '../api/commentApi.js';
 import { defineProps, defineEmits } from 'vue';
 
 const props = defineProps({
-	userUuid: {
+	targetUuid: {
+		type: String,
+		required: true
+	},
+	targetModel: {
 		type: String,
 		required: true
 	}
@@ -40,15 +44,14 @@ async function submitComment() {
 	try {
 		const newComment = await apiAddComment({
 			message: comment.value,
-			profile: props.userUuid
-		});
+			targetUuid: props.targetUuid
+		}, props.targetModel);
 		if (newComment) {
-            console.log('New comment added:', newComment);
 			emit('comment-added', newComment);
 			comment.value = '';
 		}
 	} catch (e) {
-		// Optionally handle error
+		console.error('Error adding comment:', e);
 	}
 	submitting.value = false;
 }

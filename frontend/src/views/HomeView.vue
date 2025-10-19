@@ -29,26 +29,7 @@ onMounted(async () => {
   try {
     const postsResponse = await fetchPosts();
     const postsData = Array.isArray(postsResponse) ? postsResponse : [];
-    posts.value = postsData.map((post) => {
-      const source = post?.createdBy;
-      const createdByValue = (() => {
-        if (!source) return null;
-        if (typeof source === "string") return source;
-        if (typeof source === "object") {
-          return source._id || source.id || source.uuid || null;
-        }
-        return null;
-      })();
-      const matchedUser = userlist.value.find((user) => user._id === createdByValue);
-      return {
-        ...post,
-        author:
-          matchedUser ||
-          (typeof source === "object" && source !== null
-            ? source
-            : null),
-      };
-    });
+    posts.value = postsData;
   } catch (error) {
     console.error("Error while loading posts:", error);
     posts.value = [];

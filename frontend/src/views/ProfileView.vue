@@ -90,7 +90,8 @@
 
             <AddComment
                 v-if="user"
-                :userUuid="user.uuid"
+                :targetUuid="user.uuid"
+                :targetModel="'profile'"
                 @comment-added="handleCommentAdded"
             />
 
@@ -104,7 +105,7 @@
                         />
                         <div class="absolute right-2 top-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition ml-14 mt-2">
                             <button v-if="isAuthor(comment)" @click="editComment(comment)" class="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200">Modifier</button>
-                            <button v-if="isAuthor(comment)" @click="deleteComment(comment.uuid)" class="text-xs px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700">Supprimer</button>
+                            <button v-if="isAuthor(comment)" @click="deleteCommentProfile(comment.uuid)" class="text-xs px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700">Supprimer</button>
                         </div>
                     </div>
                 </div>
@@ -153,161 +154,163 @@
 </template>
 
 
-<script>
+<script setup>
+import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue';
+import { useRoute, useRouter, onBeforeRouteUpdate } from 'vue-router';
 import Comment from '../components/Comment.vue';
 import AddComment from '../components/AddComment.vue';
-import { fetchComments, addComment as apiAddComment, updateComment, deleteComment } from '../api/commentApi.js';
+import { fetchComments, updateComment, deleteComment } from '../api/commentApi.js';
 import { getUserByUuid, getCurrentUser, updateUser } from '../api/userApi.js';
 
-export default {
-    name: 'ProfileView',
-    components: { Comment, AddComment },
-    data() {
-        return {
-            user: null,
-            isOwnProfile: false,
-            comments: [],
-            // newComment: '',
-            loadingComments: false,
-            editingComment: null,
-            editContent: '',
-            editingProfile: false,
-            profileDraft: null,
-        };
-    },
-    async created() {
-        await this.initProfile();
-    },
-    methods: {
-        async initProfile() {
-            this.isOwnProfile = false;
-            let uuid = this.$route && this.$route.params ? this.$route.params.uuid : null;
+const route = useRoute();
+const router = useRouter();
 
-            if (!uuid) {
-                try {
-                    const me = await getCurrentUser();
-                    if (me && me.uuid) {
-                        uuid = me.uuid;
-                        this.isOwnProfile = true;
-                    }
-                } catch (e) {
-                    uuid = null;
-                }
+const user = ref(null);
+const isOwnProfile = ref(false);
+const comments = ref([]);
+const loadingComments = ref(false);
+const editingComment = ref(null);
+const editContent = ref('');
+const editingProfile = ref(false);
+const profileDraft = ref(null);
+
+function formatDate(date) {
+    if (!date) return '';
+    const d = new Date(date);
+    return d.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+async function fetchUserProfile(uuid) {
+    try {
+        if (!uuid && !isOwnProfile.value) {
+            user.value = null;
+            return;
+        }
+        if (isOwnProfile.value) {
+            user.value = await getCurrentUser();
+        } else {
+            user.value = await getUserByUuid(uuid);
+        }
+        if (isOwnProfile.value && user.value) {
+            profileDraft.value = { ...user.value };
+        }
+    } catch (e) {
+        user.value = null;
+    }
+}
+
+async function fetchCommentsProfile() {
+    loadingComments.value = true;
+    try {
+        if (!user.value) return;
+        const res = await fetchComments('profile', user.value.uuid);
+        comments.value = Array.isArray(res) ? res : [];
+    } catch (e) {
+        comments.value = [];
+    }
+    loadingComments.value = false;
+}
+
+function handleCommentAdded(newComment) {
+    if (newComment) {
+        comments.value.unshift(newComment);
+    }
+}
+
+function isAuthor(comment) {
+    return comment.userIsAuthor;
+}
+
+function startEditProfile() {
+    editingProfile.value = true;
+    profileDraft.value = { ...user.value };
+}
+
+function cancelProfileEdit() {
+    editingProfile.value = false;
+    profileDraft.value = user.value ? { ...user.value } : null;
+}
+
+async function saveProfile() {
+    if (!profileDraft.value || !user.value) return;
+    try {
+        const updated = await updateUser(user.value.uuid, profileDraft.value);
+        if (updated) {
+            user.value = { ...profileDraft.value };
+            editingProfile.value = false;
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+function editComment(comment) {
+    editingComment.value = comment;
+    editContent.value = comment.message;
+}
+
+async function saveEdit() {
+    if (!editContent.value.trim() || !editingComment.value) return;
+    try {
+        const updated = await updateComment(editingComment.value.uuid, editContent.value);
+        if (updated) {
+            const idx = comments.value.findIndex(c => c.uuid === editingComment.value.uuid);
+            if (idx !== -1) comments.value[idx].message = editContent.value;
+        }
+    } catch (e) {}
+    editingComment.value = null;
+    editContent.value = '';
+}
+
+function cancelEdit() {
+    editingComment.value = null;
+    editContent.value = '';
+}
+
+async function deleteCommentProfile(commentUuid) {
+    try {
+        const deleted = await deleteComment(commentUuid);
+        if (deleted) {
+            comments.value = comments.value.filter(c => c.uuid !== commentUuid);
+        }
+    } catch (e) {}
+}
+
+async function initProfile() {
+    isOwnProfile.value = false;
+    let uuid = route && route.params ? route.params.uuid : null;
+    if (!uuid) {
+        try {
+            const me = await getCurrentUser();
+            if (me && me.uuid) {
+                uuid = me.uuid;
+                isOwnProfile.value = true;
             }
+        } catch (e) {
+            uuid = null;
+        }
+    }
+    await fetchUserProfile(uuid);
+    await fetchCommentsProfile();
+}
 
-            await this.fetchUserProfile(uuid);
-            await this.fetchComments();
-        },
+onMounted(async () => {
+    await initProfile();
+});
 
-        beforeRouteUpdate(to, from, next) {
-            this.$nextTick(async () => {
-                try {
-                    await this.initProfile();
-                } catch (e) {
-                    // ignore
-                }
-                next();
-            });
-        },
+onBeforeRouteUpdate(async (to, from, next) => {
+    await nextTick();
+    try {
+        await initProfile();
+    } catch (e) {}
+    next();
+});
 
-        formatDate(date) {
-            if (!date) return '';
-            const d = new Date(date);
-            return d.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
-        },
-        async fetchUserProfile(uuid) {
-            try {
-                if (!uuid && !this.isOwnProfile) {
-                    this.user = null;
-                    return;
-                }
-
-                if (this.isOwnProfile) {
-                    this.user = await getCurrentUser();
-                } else {
-                    this.user = await getUserByUuid(uuid);
-                }
-
-                if (this.isOwnProfile && this.user) {
-                    this.profileDraft = { ...this.user };
-                }
-            } catch (e) {
-                this.user = null;
-            }
-        },
-        async fetchComments() {
-            this.loadingComments = true;
-            try {
-                if (!this.user) return;
-                const comments = await fetchComments(this.user.uuid);
-                this.comments = Array.isArray(comments) ? comments : [];
-            } catch (e) {
-                this.comments = [];
-            }
-            this.loadingComments = false;
-        },
-        handleCommentAdded(newComment) {
-            if (newComment) {
-                this.comments.unshift(newComment);
-            }
-        },
-        isAuthor(comment) {
-            return comment.userIsAuthor;
-        },
-        startEditProfile() {
-            this.editingProfile = true;
-            this.profileDraft = { ...this.user };
-        },
-        cancelProfileEdit() {
-            this.editingProfile = false;
-            this.profileDraft = this.user ? { ...this.user } : null;
-        },
-        async saveProfile() {
-            if (!this.profileDraft || !this.user) return;
-            try {
-                const updated = await updateUser(this.user.uuid, this.profileDraft);
-                if (updated) {
-                    this.user = { ...this.profileDraft };
-                    this.editingProfile = false;
-                }
-            } catch (e) {
-                console.error(e);
-            }
-        },
-        editComment(comment) {
-            this.editingComment = comment;
-            this.editContent = comment.message;
-        },
-        async saveEdit() {
-            if (!this.editContent.trim() || !this.editingComment) return;
-            try {
-                const updated = await updateComment(this.editingComment.uuid, this.editContent);
-                if (updated) {
-                    const idx = this.comments.findIndex(c => c.uuid === this.editingComment.uuid);
-                    if (idx !== -1) this.comments[idx].message = this.editContent;
-                }
-            } catch (e) {}
-            this.editingComment = null;
-            this.editContent = '';
-        },
-        cancelEdit() {
-            this.editingComment = null;
-            this.editContent = '';
-        },
-        async deleteComment(commentUuid) {
-            try {
-                const deleted = await deleteComment(commentUuid);
-                if (deleted) {
-                    this.comments = this.comments.filter(c => c.uuid !== commentUuid);
-                }
-            } catch (e) {}
-        },
-    },
-    watch: {
-        '$route'(to, from) {
-            if (to.fullPath === from.fullPath) return;
-            this.initProfile().catch(() => {});
-        },
-    },
-};
+watch(
+    () => route.fullPath,
+    (to, from) => {
+        if (to === from) return;
+        initProfile().catch(() => {});
+    }
+);
 </script>
