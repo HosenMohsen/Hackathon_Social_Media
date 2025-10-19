@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import PostList from "@/components/PostList.vue";
+import AddPost from "@/components/AddPost.vue";
 import { getUsers } from "@/api/userApi.js";
 import { fetchPosts } from "@/api/postApi.js";
 import { RouterLink } from "vue-router";
@@ -8,6 +9,18 @@ import { RouterLink } from "vue-router";
 const posts = ref([]);
 const userlist = ref([]);
 const isUserListOpen = ref(false);
+
+// Rafraîchir les posts après ajout
+const refreshPosts = async () => {
+  try {
+    const postsResponse = await fetchPosts();
+    const postsData = Array.isArray(postsResponse) ? postsResponse : [];
+    posts.value = postsData;
+  } catch (error) {
+    console.error("Error while loading posts:", error);
+    posts.value = [];
+  }
+};
 
 const toggleUserList = () => {
   isUserListOpen.value = !isUserListOpen.value;
@@ -25,15 +38,7 @@ onMounted(async () => {
     console.error("Error while loading users:", error);
     userlist.value = [];
   }
-
-  try {
-    const postsResponse = await fetchPosts();
-    const postsData = Array.isArray(postsResponse) ? postsResponse : [];
-    posts.value = postsData;
-  } catch (error) {
-    console.error("Error while loading posts:", error);
-    posts.value = [];
-  }
+  await refreshPosts();
 });
 </script>
 
@@ -119,6 +124,7 @@ onMounted(async () => {
         </aside>
         <section class="flex-1 w-full">
           <h2 class="text-2xl font-semibold text-gray-900 mb-4">Posts</h2>
+          <AddPost @post-added="refreshPosts" />
           <PostList :posts="posts" />
         </section>
       </div>

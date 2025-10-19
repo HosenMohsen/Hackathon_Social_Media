@@ -19,20 +19,15 @@ export async function fetchPosts() {
     }
 }
 
-export async function addPost() {
+export async function addPost(post) {
     try {
         const response = await fetch(API_POST_URL, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
-            body: JSON.stringify({
-                content: content.value,
-                createdAt: createdAt.value,
-                uuid: uuid.value,
-                createdBy: createdBy.value,
-                images: images.value,
-            })
+            body: JSON.stringify(post)
         });
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
