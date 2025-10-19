@@ -121,4 +121,4 @@ Link backend Vercel : [https://hackathon-social-media-backend-phi.vercel.app/](h
 
 ## Deployment Strategy
 
-We disabled Vercel's native continuous deployment (CD) to use GitHub Actions workflows (.yml) for automated deployment. The frontend is deployed only when its folder is modified, and the backend only when the backend folder is changed. Vercel's CD can be used, but we preferred the flexibility of GitHub Actions.
+We use Vercel for deployment, configured to trigger deployments only when changes are made to the respective frontend or backend folders.
