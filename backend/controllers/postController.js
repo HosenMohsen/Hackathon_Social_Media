@@ -1,5 +1,6 @@
 const User = require("../models/userModel");
 const Post = require("../models/postModel");
+const Token = require("../models/tokenModel");
 const PostError = require("../errors/postError");
 const UserError = require("../errors/userError");
 const AuthError = require("../errors/authError");
@@ -11,7 +12,17 @@ const getAllPosts = async (req, res) => {
             .populate("createdBy", "uuid firstName lastName avatar")
             .sort({ createdAt: -1});
         if (!posts) throw PostError.notFound();
-        res.status(200).json(posts);
+        let currentUserUuid = null;
+        const tokenValue = req.cookies?.authToken || req.headers["authorization"]?.replace("Bearer ", "");
+        if (tokenValue) {
+            const token = await Token.findOne({ tokenValue });
+            if (token && token.expiresAt > new Date()) currentUserUuid = token.userUuid;
+        }
+        const postsWithFlag = posts.map(post => ({
+            ...post.toObject(),
+            userIsAuthor: currentUserUuid ? post.createdBy?.uuid === currentUserUuid : false
+        }));
+        res.status(200).json(postsWithFlag);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -25,7 +36,17 @@ const getProfilePosts = async (req, res) => {
             .populate("createdBy", "uuid firstName lastName avatar")
             .sort({ createdAt: -1 });
         if (!posts) throw PostError.notFound();
-        res.status(200).json(posts);
+        let currentUserUuid = null;
+        const tokenValue = req.cookies?.authToken || req.headers["authorization"]?.replace("Bearer ", "");
+        if (tokenValue) {
+            const token = await Token.findOne({ tokenValue });
+            if (token && token.expiresAt > new Date()) currentUserUuid = token.userUuid;
+        }
+        const postsWithFlag = posts.map(post => ({
+            ...post.toObject(),
+            userIsAuthor: currentUserUuid ? post.createdBy?.uuid === currentUserUuid : false
+        }));
+        res.status(200).json(postsWithFlag);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
