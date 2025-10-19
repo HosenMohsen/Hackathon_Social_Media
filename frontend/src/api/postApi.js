@@ -38,3 +38,43 @@ export async function addPost(post) {
         console.error('Error adding post:', error);
     }
 }
+
+
+export async function updatePost(postUuid, data) {
+    try {
+        const response = await fetch(`${API_POST_URL}/${postUuid}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(data)
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error updating post:', error);
+        return null;
+    }
+}
+
+export async function deletePost(postUuid) {
+    try {
+        const response = await fetch(`${API_POST_URL}/${postUuid}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return true;
+    } catch (error) {
+        console.error('Error deleting post:', error);
+        return false;
+    }
+}

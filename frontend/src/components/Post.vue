@@ -23,8 +23,12 @@
                 <img :src="image" alt="Post image" class="rounded-lg w-full max-h-60 object-cover" />
             </div>
         </div>
-        <div class="flex justify-between text-gray-500 text-sm border-t pt-3 mb-2">
+        <div class="flex justify-between items-center text-gray-500 text-sm border-t pt-3 mb-2">
             <AddComment :targetUuid="post.uuid" :targetModel="'post'" @comment-added="handleCommentAdded" />
+            <div v-if="isPostAuthor" class="flex gap-2">
+                <button @click="editPost" class="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200">Modifier le post</button>
+                <button @click="deletePost" class="text-xs px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700">Supprimer le post</button>
+            </div>
         </div>
         <div v-if="comments && comments.length" class="mt-4">
             <div class="text-xs text-gray-500 mb-1">Comments:</div>
@@ -52,18 +56,49 @@
                 </div>
             </div>
         </div>
+
+        <!-- Modal édition post -->
+        <div v-if="editingPost" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div class="bg-white w-full max-w-lg rounded-xl p-6 shadow-lg">
+                <h3 class="text-lg font-semibold text-gray-800">Modifier le post</h3>
+                <textarea v-model="editPostContent" class="mt-3 w-full border border-gray-200 rounded-md p-3 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-indigo-200"></textarea>
+                <div class="mt-4">
+                    <div class="mb-2 font-semibold">Images</div>
+                    <div class="flex flex-wrap gap-3 mb-3">
+                        <div v-for="(img, idx) in editPostImages" :key="idx" class="relative">
+                            <img :src="img" alt="Image" class="w-24 h-24 object-cover rounded-lg border" />
+                            <button @click="editPostImages.splice(idx, 1)" class="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center">&times;</button>
+                        </div>
+                    </div>
+                    <input type="text" v-model="newImageUrl" placeholder="Ajouter une URL d'image" class="border border-gray-200 rounded-md px-2 py-1 w-64" />
+                    <button @click="addImageToEdit" class="ml-2 px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600">Ajouter</button>
+                </div>
+                <div class="mt-4 flex justify-end gap-3">
+                    <button @click="cancelEditPost" class="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300">Annuler</button>
+                    <button @click="saveEditPost" class="px-4 py-2 rounded-md bg-indigo-500 text-white hover:bg-indigo-600">Enregistrer</button>
+                </div>
+            </div>
+        </div>
     </article>
 </template>
+
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import AddComment from './AddComment.vue'
 import Comment from './Comment.vue'
 import { fetchComments, updateComment, deleteComment } from '../api/commentApi.js';
+import { updatePost, deletePost as apiDeletePost } from '../api/postApi.js';
+const emit = defineEmits(['post-deleted']);
 
 const editingComment = ref(null);
 const editContent = ref('');
 const comments = ref([])
+
+const editingPost = ref(false);
+const editPostContent = ref('');
+const editPostImages = ref([]);
+const newImageUrl = ref('');
 
 const props = defineProps({
     post: {
@@ -72,6 +107,14 @@ const props = defineProps({
         default: () => ({})
     }
 })
+
+const post = computed(() => props.post || {})
+
+// Détection de l'auteur du post
+const isPostAuthor = computed(() => {
+    // On suppose que le backend ajoute userIsAuthor sur le post
+    return post.value.userIsAuthor === true;
+});
 
 const loadComments = async () => {
     try {
@@ -122,7 +165,53 @@ async function deleteCommentPost(commentUuid) {
     } catch (e) {}
 }
 
-const post = computed(() => props.post || {})
+function editPost() {
+    editingPost.value = true;
+    editPostContent.value = post.value.content;
+    editPostImages.value = Array.isArray(post.value.images) ? [...post.value.images] : [];
+    newImageUrl.value = '';
+}
+
+function cancelEditPost() {
+    editingPost.value = false;
+    editPostContent.value = '';
+    editPostImages.value = [];
+    newImageUrl.value = '';
+}
+
+function addImageToEdit() {
+    const url = newImageUrl.value.trim();
+    if (url && editPostImages.value.length < 4) {
+        editPostImages.value.push(url);
+        newImageUrl.value = '';
+    }
+}
+
+async function saveEditPost() {
+    if (!editPostContent.value.trim() || !post.value) return;
+    try {
+        const updated = await updatePost(post.value.uuid, {
+            content: editPostContent.value,
+            images: editPostImages.value
+        });
+        if (updated) {
+            post.value.content = editPostContent.value;
+            post.value.images = [...editPostImages.value];
+            editingPost.value = false;
+        }
+    } catch (e) {}
+}
+
+async function deletePost() {
+    if (!post.value) return;
+    if (!confirm('Voulez-vous vraiment supprimer ce post ?')) return;
+    try {
+        const deleted = await apiDeletePost(post.value.uuid);
+        if (deleted) {
+            emit('post-deleted', post.value.uuid);
+        }
+    } catch (e) {}
+}
 
 const timeAgo = computed(() => {
     const now = new Date()
