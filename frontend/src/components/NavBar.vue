@@ -1,6 +1,6 @@
 <script setup>
-import { RouterLink } from "vue-router";
-import { ref, onMounted } from "vue";
+import { RouterLink, useRoute } from "vue-router";
+import { ref, onMounted, watch } from "vue";
 import { validateToken } from "@/api/tokenApi";
 
 const isAuthenticated = ref(false);
@@ -10,6 +10,14 @@ async function checkTokenValidity() {
   const token = localStorage.getItem("token");
   isAuthenticated.value = !!token && await validateToken(token);
 }
+
+const route = useRoute();
+watch(
+  () => route.fullPath,
+  () => {
+    checkTokenValidity();
+  }
+);
 
 function toggleMobileMenu() {
   mobileMenuOpen.value = !mobileMenuOpen.value;
