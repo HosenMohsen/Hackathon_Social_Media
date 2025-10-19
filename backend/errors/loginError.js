@@ -12,23 +12,10 @@ class LoginError extends AppError {
     static incorrectEmail() {
         return new LoginError("Email incorrect", 404);
     }
-    /*
-    static missingToken() {
-      return new AuthError("No token provided", 401);
+    
+    static invalidPasswordFormat() {
+      return new LoginError("Invalid password format, the password must be a SHA-512 hash of 128 characters", 400);
     }
-  
-    static invalidToken() {
-      return new AuthError("Invalid or expired token", 401);
-    }
-  
-    static sessionInvalid() {
-      return new AuthError("Session invalid — please re-login", 401);
-    }
-  
-    static unauthorized() {
-      return new AuthError("Unauthorized access", 403);
-    }
-      */
 }
 
 module.exports = LoginError;
