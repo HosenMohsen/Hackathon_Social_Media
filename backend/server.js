@@ -29,7 +29,8 @@ app
     .use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
 
 mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log('✅ Connecté à MongoDB Atlas'))
+    .then(() => {
+        console.log('✅ Connecté à MongoDB Atlas')
+        app.listen(3000, () => console.log('Serveur en local sur http://localhost:3000'));
+    })
     .catch(err => console.error('❌ Erreur MongoDB:', err));
-
-app.listen(3000, () => console.log('Serveur en local sur http://localhost:3000'));
