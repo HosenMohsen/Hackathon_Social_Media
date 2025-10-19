@@ -6,7 +6,10 @@ const AuthError = require("../errors/authError");
 
 const getAllPosts = async (req, res) => {
     try {
-        const posts = await Post.find().sort({ createdAt: -1});
+        const posts = await Post
+            .find()
+            .populate("createdBy", "uuid firstName lastName avatar")
+            .sort({ createdAt: -1});
         if (!posts) throw PostError.notFound();
         res.status(200).json(posts);
     } catch (err) {
