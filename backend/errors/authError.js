@@ -24,6 +24,10 @@ class AuthError extends AppError {
     static unauthorized() {
       return new AuthError("Unauthorized access", 403);
     }
+
+    static invalidPasswordFormat() {
+      return new AuthError("Invalid password format, the password must be a SHA-512 hash of 128 characters", 400);
+    }
 }
 
 module.exports = AuthError;

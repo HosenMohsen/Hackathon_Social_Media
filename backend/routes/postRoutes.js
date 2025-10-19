@@ -43,9 +43,9 @@ router.get('/', getAllPosts)
  *       200:
  *         description: List of posts of the user
  *       404:
- *         description: User not found
- *       404:
- *         description: Posts not found
+ *         description: |
+ *           - User not found
+ *           - Posts not found
  *       500:
  *         description: Server error
  */
@@ -103,17 +103,18 @@ router.get('/:uuid', getPostByUuid)
  *       201:
  *         description: Post created successfully
  *       400:
- *         description: Missing required fields 
- *       400:
- *         description: Message is too big, the maximum length is 1500 characters
- *       400:
- *         description: You can only upload 4 image
+ *         description: |
+ *           - Missing required fields
+ *           - Message is too big (the maximum length is 1500 characters)
+ *           - You can only upload 4 image
  *       401:
  *         description: Session invalid — please re-login
  *       403:
  *         description: You cannot edit someone else's post
  *       404:
- *         description: User not found
+ *         description: |
+ *           - User not found
+ *           - Post not found
  *       500:
  *         description: Server error
  */
@@ -153,17 +154,18 @@ router.post('/', authMiddleware, createPost)
  *       200:
  *         description: Post updated successfully
  *       400:
- *         description: Missing required fields
- *       400:
- *         description: Message is too big, the maximum length is 1500 characters
- *       400:
- *         description: You can only upload 4 image
+ *         description: |
+ *           - Missing required fields
+ *           - Message is too big (the maximum length is 1500 characters)
+ *           - You can only upload 4 image
  *       401:
  *         description: Session invalid — please re-login
  *       403:
  *         description: You cannot edit someone else's post
  *       404:
- *         description: Post not found
+ *         description: |
+ *           - Post not found
+ *           - User not found
  *       500:
  *         description: Server error
  */

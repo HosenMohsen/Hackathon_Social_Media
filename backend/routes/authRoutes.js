@@ -52,15 +52,15 @@ const loginController = require("../controllers/loginController");
  *       201:
  *         description: User created successfully, created the token and add the user information to the database
  *       400:
- *         description: Email already used
+ *         description: |
+ *           - Email already used
+ *           - Invalid password format (the password must be a SHA-512 hash of 128 characters)
  *       401:
- *         description: Invalid email format, the email must be in the format example@example.com
- *       401:
- *         description: No token provided
- *       401:
- *         description: Invalid or expired token
- *       401:
- *         description: Session invalid — please re-login
+ *         description: |
+ *           - Invalid email format (must be example@example.com)
+ *           - No token provided
+ *           - Invalid or expired token
+ *           - Session invalid — please re-login
  *       403:
  *         description: Unauthorized access
  *       500:
@@ -94,7 +94,9 @@ router.post('/signup', authController)
  *       200:
  *         description: Login successful, retourn the token the token, the token expires at and the user information
  *       400: 
- *         description: Email and password are required
+ *         description: |
+ *           - Email and password are required
+ *           - Invalid password format (the password must be a SHA-512 hash of 128 characters)
  *       401:
  *         description: Password incorrect
  *       404:

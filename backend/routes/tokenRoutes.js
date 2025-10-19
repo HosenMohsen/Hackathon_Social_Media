@@ -30,7 +30,7 @@ router.get('/', getAllTokens)
  * @swagger
  * /tokens/check:
  *   get:
- *     summary: Vérifie la validité du token actuel
+ *     summary: Check if the current token is valid
  *     tags: [Tokens]
  *     security:
  *       - bearerAuth: []
@@ -38,9 +38,9 @@ router.get('/', getAllTokens)
  *       200:
  *         description: Token is valid
  *       401:
- *         description: Token invalid or expired
- *       401:
- *         description: Session invalid — please re-login
+ *         description: |
+ *           - Token invalid or expired
+ *           - Session invalid — please re-login
  *       500:
  *         description: Server error
  */
@@ -110,12 +110,12 @@ router.post("/", createToken)
  *     responses:
  *       200:
  *         description: Token deleted successfully
- *       401:
- *         description: Token invalid or expired
- *       401:
- *         description: Session invalid — please re-login
  *       400:
  *         description: Missing required fields
+ *       401:
+ *         description: |
+ *           - Token invalid or expired
+ *           - Session invalid — please re-login
  *       404:
  *         description: Token not found
  *       500:

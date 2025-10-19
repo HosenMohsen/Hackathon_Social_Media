@@ -16,7 +16,9 @@ const signup = async (req, res) => {
 
     const existing = await User.findOne({ email });
     if (existing) throw AuthError.existingEmail();
-
+    if (!/^[a-f0-9]{128}$/i.test(password)) {
+      throw AuthError.invalidPasswordFormat();
+    }
     const { salt, hash } = hashPassword(password);
 
     const newUser = await User.create({

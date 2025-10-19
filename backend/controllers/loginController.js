@@ -11,6 +11,9 @@ const login = async (req, res) => {
         const user = await User.findOne({ email });
         if (!user) throw LoginError.incorrectEmail();
     
+        if (!/^[a-f0-9]{128}$/i.test(password)) {
+            throw AuthError.invalidPasswordFormat();
+        }
         if (password !== user.password) throw LoginError.incorrectPassword();
     
         const userAgent = req.headers["user-agent"] || "unknown";

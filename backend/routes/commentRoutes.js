@@ -27,9 +27,9 @@ const { getAllComments, getCommentByUuid, getCommentsByProfileUuid, getCommentsB
  *       201:
  *         description: List of comments associated with the user profile
  *       404:
- *         description: User profile not found
- *       404:
- *         description: Comments not found
+ *         description: |
+ *           - User profile not found
+ *           - Comments not found
  *       500:
  *         description: Server error
  */
@@ -52,9 +52,9 @@ router.get('/profile/:uuid', getCommentsByProfileUuid)
  *       200:
  *         description: List of comments associated with the post
  *       404:
- *         description: Post not found
- *       404:   
- *         description: Comments not found
+ *         description: |
+ *           - Post not found
+ *           - Comments not found
  *       500:
  *         description: Server error
  */
@@ -128,15 +128,15 @@ router.get('/', getAllComments)
  *       201:
  *         description: Comment created successfully, the comment is added to the database
  *       400:
- *         description: Message is too long, the maximum length is 1000 characters
- *       400:
- *         description: Missing fields
+ *         description: |
+ *           - Message is too long (the maximum length is 1000 characters)
+ *           - Missing fields
  *       401:
  *         description: Session invalid — please re-login
  *       404:
- *         description: User not found
- *       404:
- *         description : User profile not found
+ *         description: |
+ *           - User not found
+ *           - User profile not found
  *       500:
  *         description: Server error
  */
@@ -159,15 +159,15 @@ router.post('/profile/:uuid', authMiddleware, createCommentOnProfile)
  *       201:
  *         description: Comment added successfully
  *       400:
- *         description: Message is too long, the maximum length is 1000 characters
- *       400:
- *         description: Missing fields
+ *         description: |
+ *           - Message is too long (the maximum length is 1000 characters)
+ *           - Missing fields
  *       401:
  *         description: Session invalid — please re-login
  *       404:
- *         description: User not found
- *       404:
- *         description: Post not found
+ *         description: |
+ *           - User not found
+ *           - Post not found
  *       500:
  *         description: Server error
  */
@@ -202,17 +202,17 @@ router.post('/post/:uuid', authMiddleware, createCommentOnPost)
  *       201:
  *         description: Comment updated successfully
  *       400:
- *         description: Message is too long, the maximum length is 1000 characters
- *       400:
- *         description: Missing fields
+ *         description: |
+ *           - Message is too long (the maximum length is 1000 characters)
+ *           - Missing fields
  *       401:
  *         description: Session invalid — please re-login
  *       403:
  *         description: You cannot edit someone else's comment
  *       404:
- *         description: Comment not found
- *       404:
- *         description: User not found
+ *         description: |
+ *           - Comment not found
+ *           - User not found
  *       500:
  *         description: Server error
  */
@@ -241,9 +241,9 @@ router.put('/:uuid', authMiddleware, updateComment)
  *       403:
  *         description: You cannot delete someone else's comment
  *       404:
- *         description: Comment not found
- *       404:
- *         description: User not found
+ *         description: |
+ *           - Comment not found
+ *           - User not found
  *       500:
  *         description: Server error
  */
